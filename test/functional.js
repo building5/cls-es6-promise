@@ -5,7 +5,7 @@ var chai = require('chai');
 var cls = require('continuation-local-storage');
 var Promise = require('es6-promise').Promise;
 var expect = chai.expect;
-
+var assert = chai.assert;
 var ns = cls.createNamespace('test');
 
 // chai config
@@ -152,6 +152,44 @@ describe('The es6-promise library', function() {
         });
 
         return Promise.all(results);
+      });
+    });
+
+    describe('when initial promise rejects in a chain', function() {
+
+      describe('and the initial handler has no onFailure handler', function() {
+
+        it('passes original error to eventual failure handler', function() {
+          var originalError = new Error('fail');
+          function shouldFail() {
+            return Promise.reject(originalError);
+          }
+
+          return shouldFail().then(function() {
+            assert.fail('should not resolve');
+          }).catch(function(err) {
+            expect(err).to.equal(originalError);
+          });
+        });
+      });
+    });
+
+    describe('when initial promise resolves in a chain', function() {
+
+      describe('and the intial handler has no onSuccess handler', function() {
+
+        it('does not generate an error', function() {
+          var originalResult = { foo: 'bar' };
+          function shouldResolve() {
+            return Promise.resolve(originalResult);
+          }
+
+          return shouldResolve().catch(function() {
+            assert.fail('should not reject');
+          }).catch(function(err) {
+            expect(err).to.not.exist();
+          });
+        });
       });
     });
   });
